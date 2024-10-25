@@ -15,11 +15,11 @@ const Table = ({ data, onEdit, onDelete }) => {
                 </tr>
                 </thead>
                 <tbody>
-                {/* eslint-disable-next-line react/prop-types */}
                 {data.map((item, index) => (
                     <Baris
-                        key={index}
-                        no={item.no}
+                        key={item.id} // Menggunakan item.id sebagai key lebih baik dari index
+                        no={index + 1}
+                        id={item.id}
                         nim={item.nim}
                         name={item.name}
                         onEdit={onEdit}
@@ -31,7 +31,6 @@ const Table = ({ data, onEdit, onDelete }) => {
         </div>
     );
 };
-
 
 
 

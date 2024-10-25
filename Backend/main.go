@@ -82,9 +82,23 @@ func updateMahasiswa(c *fiber.Ctx) error {
 }
 
 func deleteMahasiswa(c *fiber.Ctx) error {
-	id := c.Params("id")
-	if err := db.Delete(&Mahasiswa{}, id).Error; err != nil {
-		return c.Status(404).JSON(fiber.Map{"error": "Mahasiswa not found"})
-	}
-	return c.JSON(fiber.Map{"message": "Mahasiswa berhasil dihapus"})
+    id := c.Params("id")
+
+    // Pastikan ID ada
+    if id == "" {
+        return c.Status(400).JSON(fiber.Map{"error": "ID is required"})
+    }
+
+    // Cari mahasiswa terlebih dahulu
+    var mahasiswa Mahasiswa
+    if err := db.First(&mahasiswa, id).Error; err != nil {
+        return c.Status(404).JSON(fiber.Map{"error": "Mahasiswa not found"})
+    }
+
+    // Hapus mahasiswa
+    if err := db.Delete(&mahasiswa).Error; err != nil {
+        return c.Status(500).JSON(fiber.Map{"error": "Failed to delete mahasiswa"})
+    }
+
+    return c.Status(200).JSON(fiber.Map{"message": "Mahasiswa berhasil dihapus"})
 }

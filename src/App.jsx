@@ -59,136 +59,205 @@ function Header() {
 
 // function Content() {
 //     const [isModalOpen, setIsModalOpen] = useState(false);
-//     const [data, setData] = useState([ // DITAMBAHKAN
-//         {no: "1", nim: "A11.2022.14616", name: "M. JAMALUDIN NUR"},
-//         {no: "2", nim: "A11.2022.xXXXX", name: "SEPUH"},
-//         {no: "3", nim: "A11.2022.xXXXX", name: "KCI"},
-//     ]);
+//     const [data, setData] = useState([]);
+//     const [isLoading, setIsLoading] = useState(false);
+//     const [newStudent, setNewStudent] = useState({ nim: '', name: '' });
 //
-//     const [newStudent, setNewStudent] = useState({ // DITAMBAHKAN
-//         nim: '',
-//         name: ''
-//     });
+//     useEffect(() => {
+//         fetchMahasiswa();
+//     }, []);
 //
-//     // DITAMBAHKAN: State untuk menyimpan data sementara untuk edit
-//     const [editStudentIndex, setEditStudentIndex] = useState(null);
-//     const [editedStudent, setEditedStudent] = useState({ nim: '', name: '' });
+//     const fetchMahasiswa = async () => {
+//         setIsLoading(true);
+//         try {
+//             const response = await axios.get('http://localhost:8080/mahasiswa');
+//             setData(response.data);
+//         } catch (error) {
+//             console.error('Error fetching data:', error);
+//             Swal.fire('Error', 'Gagal mengambil data mahasiswa', 'error');
+//         } finally {
+//             setIsLoading(false);
+//         }
+//     };
 //
 //     const handleOpenModal = () => setIsModalOpen(true);
 //     const handleCloseModal = () => {
 //         setIsModalOpen(false);
-//         setEditStudentIndex(null); // Reset saat modal ditutup
-//         setEditedStudent({ nim: '', name: '' }); // Reset saat modal ditutup
+//         setNewStudent({ nim: '', name: '' }); // Reset form
 //     };
 //
+//     const handleAddStudent = async (e) => {
+//         e.preventDefault();
+//         setIsLoading(true);
+//         try {
+//             if (!newStudent.nim || !newStudent.name) {
+//                 throw new Error('NIM dan Nama harus diisi');
+//             }
 //
-//     const handleAddStudent = (e) => { // DITAMBAHKAN
-//         e.preventDefault(); // Mencegah reload halaman
-//         const newStudentData = {
-//             no: (data.length + 1).toString(), // DITAMBAHKAN
-//             nim: newStudent.nim,
-//             name: newStudent.name
-//         };
-//         setData([...data, newStudentData]); // DITAMBAHKAN
-//         setNewStudent({nim: '', name: ''}); // DITAMBAHKAN
-//         handleCloseModal(); // DITAMBAHKAN
-//         Swal.fire('Berhasil!', 'Mahasiswa berhasil ditambahkan', 'success'); // DITAMBAHKAN
+//             const response = await axios.post('http://localhost:8080/mahasiswa', newStudent);
+//             setData(prevData => [...prevData, response.data]);
+//             handleCloseModal();
+//             await Swal.fire({
+//                 icon: 'success',
+//                 title: 'Berhasil!',
+//                 text: 'Mahasiswa berhasil ditambahkan',
+//                 timer: 1500,
+//                 showConfirmButton: false
+//             });
+//         } catch (error) {
+//             console.error('Error adding student:', error);
+//             await Swal.fire({
+//                 icon: 'error',
+//                 title: 'Gagal',
+//                 text: error.response?.data?.message || error.message || 'Gagal menambahkan mahasiswa',
+//                 confirmButtonColor: '#dc3545'
+//             });
+//         } finally {
+//             setIsLoading(false);
+//         }
 //     };
 //
-//     // Fungsi untuk mengonfirmasi delete
-//     const handleDelete = (index) => { // DITAMBAHKAN: Terima index untuk menghapus
-//         Swal.fire({
-//             title: 'Yakin delete kah bg?',
-//             text: 'Barang yang sudah di-delete tidak bisa dikembalikan',
+//     const handleDelete = async (id) => {
+//         const result = await Swal.fire({
+//             title: 'Konfirmasi Hapus',
+//             text: 'Data yang sudah dihapus tidak dapat dikembalikan',
 //             icon: 'warning',
 //             showCancelButton: true,
-//             confirmButtonColor: '#3085d6',
-//             cancelButtonColor: '#d33',
-//             confirmButtonText: 'Yoi Hapus ja',
-//         }).then((result) => {
-//             if (result.isConfirmed) {
-//                 // DITAMBAHKAN: Hapus data berdasarkan index
-//                 const updatedData = data.filter((_, i) => i !== index);
-//                 setData(updatedData);
-//                 Swal.fire('Terhapus Puh sepuhhh', 'Mampus terhapus bg', 'success');
-//             }
+//             confirmButtonColor: '#dc3545',
+//             cancelButtonColor: '#6c757d',
+//             confirmButtonText: 'Ya, Hapus',
+//             cancelButtonText: 'Batal'
 //         });
+//
+//         if (result.isConfirmed) {
+//             setIsLoading(true);
+//             try {
+//                 const response = await axios.delete(`http://localhost:8080/mahasiswa/${id}`);
+//
+//                 if (response.status === 200) {
+//                     setData(prevData => prevData.filter(student => student.id !== id));
+//                     await Swal.fire({
+//                         icon: 'success',
+//                         title: 'Berhasil',
+//                         text: 'Data berhasil dihapus',
+//                         timer: 1500,
+//                         showConfirmButton: false
+//                     });
+//                 }
+//             } catch (error) {
+//                 console.error('Error:', error);
+//                 await Swal.fire({
+//                     icon: 'error',
+//                     title: 'Gagal Menghapus',
+//                     text: error.response?.data?.message || 'Terjadi kesalahan saat menghapus data',
+//                     confirmButtonColor: '#dc3545'
+//                 });
+//             } finally {
+//                 setIsLoading(false);
+//             }
+//         }
 //     };
 //
-//     // Fungsi untuk mengedit data
-//     const handleEdit = (index) => { // DITAMBAHKAN: Terima index untuk mengedit
-//         setEditStudentIndex(index);
-//         const studentToEdit = data[index];
-//         setEditedStudent({nim: studentToEdit.nim, name: studentToEdit.name});
-//
-//         Swal.fire({
-//             title: 'Edit Mahasiswa',
-//             html: `
-//                 <label for="edit-name" class="block text-gray-700">Nama</label>
-//                 <input id="edit-name" type="text" class="w-full px-4 py-2 border rounded-lg" value="${studentToEdit.name}">
-//             `,
-//             showCancelButton: true,
-//             confirmButtonText: 'Simpan',
-//             cancelButtonText: 'Batal',
-//             preConfirm: () => {
-//                 const editedName = document.getElementById('edit-name').value;
-//                 if (!editedName) {
-//                     Swal.showValidationMessage('Nama tidak boleh kosong');
+//     const handleEdit = async (id, currentName) => {
+//         try {
+//             const { value: newName, isConfirmed } = await Swal.fire({
+//                 title: 'Edit Data',
+//                 input: 'text',
+//                 inputLabel: 'Nama Mahasiswa',
+//                 inputValue: currentName,
+//                 showCancelButton: true,
+//                 confirmButtonText: 'Simpan',
+//                 cancelButtonText: 'Batal',
+//                 confirmButtonColor: '#198754',
+//                 cancelButtonColor: '#6c757d',
+//                 inputValidator: (value) => {
+//                     if (!value || !value.trim()) {
+//                         return 'Nama tidak boleh kosong!';
+//                     }
+//                     if (value.length > 100) {
+//                         return 'Nama terlalu panjang (maksimal 100 karakter)';
+//                     }
 //                 }
-//                 return editedName;
-//             },
-//         }).then((result) => {
-//             if (result.isConfirmed) {
-//                 const newName = result.value;
-//                 // DITAMBAHKAN: Perbarui data hanya di tampilan
-//                 const updatedData = data.map((item, i) =>
-//                     i === editStudentIndex ? { ...item, name: newName } : item
-//                 );
-//                 setData(updatedData);
-//                 Swal.fire('Berhasil!', `Nama berhasil diubah menjadi ${newName}`, 'success');
+//             });
+//
+//             if (isConfirmed && newName) {
+//                 setIsLoading(true);
+//                 const response = await axios.put(`http://localhost:8080/mahasiswa/${id}`, {
+//                     name: newName.trim()
+//                 });
+//
+//                 if (response.status === 200) {
+//                     setData(prevData =>
+//                         prevData.map(student =>
+//                             student.id === id ? { ...student, name: newName.trim() } : student
+//                         )
+//                     );
+//
+//                     await Swal.fire({
+//                         icon: 'success',
+//                         title: 'Berhasil',
+//                         text: 'Data berhasil diperbarui',
+//                         timer: 1500,
+//                         showConfirmButton: false
+//                     });
+//                 }
 //             }
-//         });
+//         } catch (error) {
+//             console.error('Error:', error);
+//             await Swal.fire({
+//                 icon: 'error',
+//                 title: 'Gagal Memperbarui',
+//                 text: error.response?.data?.message || 'Terjadi kesalahan saat memperbarui data',
+//                 confirmButtonColor: '#dc3545'
+//             });
+//         } finally {
+//             setIsLoading(false);
+//         }
 //     };
 //
 //     return (
 //         <>
-//             {/* Bagian judul dan tombol tambah */}
 //             <div className="flex justify-between mb-1 p-4 bg-blue-50">
 //                 <h2 className="text-xl font-semibold">LIST MAHASISWA</h2>
 //                 <Button
 //                     label="Tambah"
 //                     className="bg-green-500 text-white"
 //                     onClick={handleOpenModal}
+//                     disabled={isLoading}
 //                 />
 //             </div>
 //
-//             {/* Bagian tabel mahasiswa */}
 //             <main className="flex-grow p-4 bg-blue-50">
-//                 <Table
-//                     data={data}
-//                     onEdit={handleEdit} // Kirimkan fungsi edit ke tabel
-//                     onDelete={handleDelete} // Kirimkan fungsi delete ke tabel
-//                 />
+//                 {isLoading ? (
+//                     <div className="flex justify-center items-center h-32">
+//                         <p>Loading...</p>
+//                     </div>
+//                 ) : (
+//                     <Table
+//                         data={data}
+//                         onEdit={handleEdit}
+//                         onDelete={handleDelete}
+//                     />
+//                 )}
 //             </main>
 //
-//
-//             {/* Modal Tambah Mahasiswa */}
 //             {isModalOpen && (
 //                 <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
 //                     <div className="bg-white p-6 rounded-lg shadow-lg w-1/3">
 //                         <h2 className="text-xl font-bold mb-4">Tambah Mahasiswa</h2>
-//                         <form onSubmit={handleAddStudent}> {/* DITAMBAHKAN */}
+//                         <form onSubmit={handleAddStudent}>
 //                             <div className="mb-4">
 //                                 <label htmlFor="name" className="block text-gray-700">Name</label>
 //                                 <input
 //                                     id="name"
 //                                     type="text"
 //                                     className="w-full px-4 py-2 border rounded-lg"
-//                                     value={newStudent.name} // DITAMBAHKAN
+//                                     value={newStudent.name}
 //                                     onChange={(e) => setNewStudent({
 //                                         ...newStudent,
 //                                         name: e.target.value
-//                                     })} // DITAMBAHKAN
+//                                     })}
+//                                     disabled={isLoading}
 //                                 />
 //                             </div>
 //                             <div className="mb-4">
@@ -197,8 +266,9 @@ function Header() {
 //                                     id="nim"
 //                                     type="text"
 //                                     className="w-full px-4 py-2 border rounded-lg"
-//                                     value={newStudent.nim} // DITAMBAHKAN
-//                                     onChange={(e) => setNewStudent({...newStudent, nim: e.target.value})} // DITAMBAHKAN
+//                                     value={newStudent.nim}
+//                                     onChange={(e) => setNewStudent({ ...newStudent, nim: e.target.value })}
+//                                     disabled={isLoading}
 //                                 />
 //                             </div>
 //                             <div className="flex justify-end">
@@ -206,11 +276,13 @@ function Header() {
 //                                     label="Batal"
 //                                     className="bg-gray-500 text-white mr-2"
 //                                     onClick={handleCloseModal}
+//                                     disabled={isLoading}
 //                                 />
 //                                 <Button
 //                                     label="Simpan"
 //                                     className="bg-green-500 text-white"
-//                                     type="submit" // DITAMBAHKAN
+//                                     type="submit"
+//                                     disabled={isLoading}
 //                                 />
 //                             </div>
 //                         </form>
@@ -221,103 +293,185 @@ function Header() {
 //     );
 // }
 
-function Content() {
+const Content = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [data, setData] = useState([]);
+    const [isLoading, setIsLoading] = useState(false);
     const [newStudent, setNewStudent] = useState({ nim: '', name: '' });
 
-    // Mengambil data mahasiswa dari API saat komponen di-mount
     useEffect(() => {
         fetchMahasiswa();
     }, []);
 
-    const fetchMahasiswa = async () => { // DITAMBAHKAN
+    const fetchMahasiswa = async () => {
+        setIsLoading(true);
         try {
             const response = await axios.get('http://localhost:8080/mahasiswa');
             setData(response.data);
         } catch (error) {
             console.error('Error fetching data:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Gagal mengambil data mahasiswa',
+                confirmButtonColor: '#dc3545'
+            });
+        } finally {
+            setIsLoading(false);
         }
     };
 
     const handleOpenModal = () => setIsModalOpen(true);
-    const handleCloseModal = () => setIsModalOpen(false);
+    const handleCloseModal = () => {
+        setIsModalOpen(false);
+        setNewStudent({ nim: '', name: '' });
+    };
 
-    const handleAddStudent = async (e) => { // DITAMBAHKAN
+    const handleAddStudent = async (e) => {
         e.preventDefault();
+        if (!newStudent.nim.trim() || !newStudent.name.trim()) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Validasi Error',
+                text: 'NIM dan Nama harus diisi',
+                confirmButtonColor: '#dc3545'
+            });
+            return;
+        }
+
+        setIsLoading(true);
         try {
             const response = await axios.post('http://localhost:8080/mahasiswa', newStudent);
-            setData([...data, response.data]); // Menambahkan mahasiswa baru ke state data
-            setNewStudent({ nim: '', name: '' });
-            handleCloseModal();
-            Swal.fire('Berhasil!', 'Mahasiswa berhasil ditambahkan', 'success');
+
+            if (response.data) {
+                setData(prevData => [...prevData, response.data]);
+                handleCloseModal();
+                await Swal.fire({
+                    icon: 'success',
+                    title: 'Berhasil!',
+                    text: 'Mahasiswa berhasil ditambahkan',
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+            }
         } catch (error) {
             console.error('Error adding student:', error);
-            Swal.fire('Error', 'Gagal menambahkan mahasiswa', 'error');
+            await Swal.fire({
+                icon: 'error',
+                title: 'Gagal',
+                text: error.response?.data?.message || 'Gagal menambahkan mahasiswa',
+                confirmButtonColor: '#dc3545'
+            });
+        } finally {
+            setIsLoading(false);
         }
     };
 
     const handleDelete = async (id) => {
-        const result = await Swal.fire({
-            title: 'Yakin delete kah bg?',
-            text: 'Barang yang sudah di-delete tidak bisa dikembalikan',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#3085d6',
-            cancelButtonColor: '#d33',
-            confirmButtonText: 'Yoi Hapus ja',
-        });
+        try {
+            const result = await Swal.fire({
+                title: 'Konfirmasi Hapus',
+                text: 'Data yang sudah dihapus tidak dapat dikembalikan',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Ya, Hapus',
+                cancelButtonText: 'Batal'
+            });
 
-        if (result.isConfirmed) {
-            try {
-                // Log ID yang akan dihapus
-                console.log('Menghapus mahasiswa dengan ID:', id);
+            if (result.isConfirmed) {
+                setIsLoading(true);
 
-                // Melakukan permintaan DELETE ke server
                 const response = await axios.delete(`http://localhost:8080/mahasiswa/${id}`);
 
-                // Cek apakah respons sukses
                 if (response.status === 200) {
-                    // Menghapus mahasiswa dari state data
-                    setData(data.filter(student => student.id !== id));
-                    Swal.fire('Terhapus Puh sepuhhh', 'Mahasiswa berhasil dihapus', 'success');
-                } else {
-                    Swal.fire('Error', 'Gagal menghapus mahasiswa', 'error');
+                    // Optimistic update
+                    setData(prevData => prevData.filter(student => student.id !== id));
+
+                    await Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil',
+                        text: 'Data berhasil dihapus',
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
                 }
-            } catch (error) {
-                console.error('Error deleting student:', error);
-                Swal.fire('Error', 'Gagal menghapus mahasiswa', 'error');
             }
+        } catch (error) {
+            console.error('Error deleting:', error);
+            await Swal.fire({
+                icon: 'error',
+                title: 'Gagal Menghapus',
+                text: error.response?.data?.message || 'Terjadi kesalahan saat menghapus data',
+                confirmButtonColor: '#dc3545'
+            });
+            // Refresh data if delete failed
+            await fetchMahasiswa();
+        } finally {
+            setIsLoading(false);
         }
     };
 
-
-    const handleEdit = async (id, currentName) => { // DITAMBAHKAN
-        const { value: newName } = await Swal.fire({
-            title: 'Edit Mahasiswa',
-            input: 'text',
-            inputLabel: 'Nama',
-            inputValue: currentName,
-            showCancelButton: true,
-            confirmButtonText: 'Simpan',
-            cancelButtonText: 'Batal',
-            preConfirm: (name) => {
-                if (!name) {
-                    Swal.showValidationMessage('Nama tidak boleh kosong');
+    const handleEdit = async (id, currentName) => {
+        try {
+            const { value: newName, isConfirmed } = await Swal.fire({
+                title: 'Edit Data',
+                input: 'text',
+                inputLabel: 'Nama Mahasiswa',
+                inputValue: currentName,
+                showCancelButton: true,
+                confirmButtonText: 'Simpan',
+                cancelButtonText: 'Batal',
+                confirmButtonColor: '#198754',
+                cancelButtonColor: '#6c757d',
+                inputValidator: (value) => {
+                    if (!value || !value.trim()) {
+                        return 'Nama tidak boleh kosong!';
+                    }
+                    if (value.length > 100) {
+                        return 'Nama terlalu panjang (maksimal 100 karakter)';
+                    }
+                    return null;
                 }
-                return name;
-            },
-        });
+            });
 
-        if (newName) {
-            try {
-                await axios.put(`http://localhost:8080/mahasiswa/${id}`, { name: newName });
-                setData(data.map(student => (student.id === id ? { ...student, name: newName } : student))); // Mengupdate mahasiswa di state data
-                Swal.fire('Berhasil!', `Nama berhasil diubah menjadi ${newName}`, 'success');
-            } catch (error) {
-                console.error('Error updating student:', error);
-                Swal.fire('Error', 'Gagal mengubah nama mahasiswa', 'error');
+            if (isConfirmed && newName && newName.trim()) {
+                setIsLoading(true);
+
+                const response = await axios.put(`http://localhost:8080/mahasiswa/${id}`, {
+                    name: newName.trim()
+                });
+
+                if (response.status === 200 && response.data) {
+                    // Optimistic update
+                    setData(prevData =>
+                        prevData.map(student =>
+                            student.id === id ? { ...student, name: newName.trim() } : student
+                        )
+                    );
+
+                    await Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil',
+                        text: 'Data berhasil diperbarui',
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+                }
             }
+        } catch (error) {
+            console.error('Error updating:', error);
+            await Swal.fire({
+                icon: 'error',
+                title: 'Gagal Memperbarui',
+                text: error.response?.data?.message || 'Terjadi kesalahan saat memperbarui data',
+                confirmButtonColor: '#dc3545'
+            });
+            // Refresh data if update failed
+            await fetchMahasiswa();
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -329,15 +483,22 @@ function Content() {
                     label="Tambah"
                     className="bg-green-500 text-white"
                     onClick={handleOpenModal}
+                    disabled={isLoading}
                 />
             </div>
 
             <main className="flex-grow p-4 bg-blue-50">
-                <Table
-                    data={data}
-                    onEdit={handleEdit}
-                    onDelete={handleDelete}
-                />
+                {isLoading ? (
+                    <div className="flex justify-center items-center h-32">
+                        <p>Loading...</p>
+                    </div>
+                ) : (
+                    <Table
+                        data={data}
+                        onEdit={handleEdit}
+                        onDelete={handleDelete}
+                    />
+                )}
             </main>
 
             {isModalOpen && (
@@ -356,6 +517,7 @@ function Content() {
                                         ...newStudent,
                                         name: e.target.value
                                     })}
+                                    disabled={isLoading}
                                 />
                             </div>
                             <div className="mb-4">
@@ -366,6 +528,7 @@ function Content() {
                                     className="w-full px-4 py-2 border rounded-lg"
                                     value={newStudent.nim}
                                     onChange={(e) => setNewStudent({ ...newStudent, nim: e.target.value })}
+                                    disabled={isLoading}
                                 />
                             </div>
                             <div className="flex justify-end">
@@ -373,11 +536,13 @@ function Content() {
                                     label="Batal"
                                     className="bg-gray-500 text-white mr-2"
                                     onClick={handleCloseModal}
+                                    disabled={isLoading}
                                 />
                                 <Button
                                     label="Simpan"
                                     className="bg-green-500 text-white"
                                     type="submit"
+                                    disabled={isLoading}
                                 />
                             </div>
                         </form>
@@ -386,7 +551,7 @@ function Content() {
             )}
         </>
     );
-}
+};
 
 
 function Footer() {
