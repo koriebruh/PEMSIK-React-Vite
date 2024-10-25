@@ -1,0 +1,39 @@
+####
+#GET http://localhost:8080/mahasiswa
+#Accept: application/json
+#Content-Type: application/json
+
+###
+GET http://localhost:8080/mahasiswa
+Accept: application/json
+
+###
+POST http://localhost:8080/mahasiswa
+Accept: application/json
+Content-Type: application/json
+
+{
+  "nim": "123456789",
+  "name": "UDIN"
+}
+
+
+###
+PUT http://localhost:8080/mahasiswa/5
+Accept: application/json
+Content-Type: application/json
+
+{
+  "nim": "123456789",
+  "name": "John Doe"
+}
+
+
+###
+DELETE http://localhost:8080/mahasiswa/8
+Accept: application/json
+
+
+
+
+###
