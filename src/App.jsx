@@ -58,17 +58,33 @@ function Header() {
 
 function Content() {
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [data, setData] = useState([ // DITAMBAHKAN
+        {no: "1", nim: "A11.2022.14616", name: "M. JAMALUDIN NUR"},
+        {no: "2", nim: "A11.2022.xXXXX", name: "SEPUH"},
+        {no: "3", nim: "A11.2022.xXXXX", name: "KCI"},
+    ]);
 
-    // Sample data for the table
-    const data = [
-        { no: "1", nim: "A11.2022.14616", name: "M. JAMALUDIN NUR" },
-        { no: "2", nim: "A11.2022.xXXXX", name: "SEPUH" },
-        { no: "3", nim: "A11.2022.xXXXX", name: "KCI" },
-    ];
+    const [newStudent, setNewStudent] = useState({ // DITAMBAHKAN
+        nim: '',
+        name: ''
+    });
 
     // Fungsi untuk membuka dan menutup modal
     const handleOpenModal = () => setIsModalOpen(true);
     const handleCloseModal = () => setIsModalOpen(false);
+
+    const handleAddStudent = (e) => { // DITAMBAHKAN
+        e.preventDefault(); // Mencegah reload halaman
+        const newStudentData = {
+            no: (data.length + 1).toString(), // DITAMBAHKAN
+            nim: newStudent.nim,
+            name: newStudent.name
+        };
+        setData([...data, newStudentData]); // DITAMBAHKAN
+        setNewStudent({nim: '', name: ''}); // DITAMBAHKAN
+        handleCloseModal(); // DITAMBAHKAN
+        Swal.fire('Berhasil!', 'Mahasiswa berhasil ditambahkan', 'success'); // DITAMBAHKAN
+    };
 
     // Fungsi untuk mengonfirmasi delete
     const handleDelete = () => {
@@ -140,10 +156,29 @@ function Content() {
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
                     <div className="bg-white p-6 rounded-lg shadow-lg w-1/3">
                         <h2 className="text-xl font-bold mb-4">Tambah Mahasiswa</h2>
-                        <form>
+                        <form onSubmit={handleAddStudent}> {/* DITAMBAHKAN */}
                             <div className="mb-4">
                                 <label htmlFor="name" className="block text-gray-700">Name</label>
-                                <input id="name" type="text" className="w-full px-4 py-2 border rounded-lg"/>
+                                <input
+                                    id="name"
+                                    type="text"
+                                    className="w-full px-4 py-2 border rounded-lg"
+                                    value={newStudent.name} // DITAMBAHKAN
+                                    onChange={(e) => setNewStudent({
+                                        ...newStudent,
+                                        name: e.target.value
+                                    })} // DITAMBAHKAN
+                                />
+                            </div>
+                            <div className="mb-4">
+                                <label htmlFor="nim" className="block text-gray-700">NIM</label>
+                                <input
+                                    id="nim"
+                                    type="text"
+                                    className="w-full px-4 py-2 border rounded-lg"
+                                    value={newStudent.nim} // DITAMBAHKAN
+                                    onChange={(e) => setNewStudent({...newStudent, nim: e.target.value})} // DITAMBAHKAN
+                                />
                             </div>
                             <div className="flex justify-end">
                                 <Button
@@ -151,7 +186,11 @@ function Content() {
                                     className="bg-gray-500 text-white mr-2"
                                     onClick={handleCloseModal}
                                 />
-                                <Button label="Simpan" className="bg-green-500 text-white" />
+                                <Button
+                                    label="Simpan"
+                                    className="bg-green-500 text-white"
+                                    type="submit" // DITAMBAHKAN
+                                />
                             </div>
                         </form>
                     </div>
