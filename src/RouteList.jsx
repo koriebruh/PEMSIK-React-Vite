@@ -21,7 +21,7 @@ const router = createBrowserRouter([
         children:[
             {
                 path:'mahasiswa',
-                index:true,
+                // index:true,
                 element: <AdminLayout/>,
             }
         ]
