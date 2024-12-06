@@ -3,13 +3,12 @@ package main
 import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/log"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/joho/godotenv"
-	 "github.com/gofiber/fiber/v2/middleware/cors"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"os"
 )
-
 
 var db *gorm.DB
 
@@ -82,23 +81,23 @@ func updateMahasiswa(c *fiber.Ctx) error {
 }
 
 func deleteMahasiswa(c *fiber.Ctx) error {
-    id := c.Params("id")
+	id := c.Params("id")
 
-    // Pastikan ID ada
-    if id == "" {
-        return c.Status(400).JSON(fiber.Map{"error": "ID is required"})
-    }
+	// Pastikan ID ada
+	if id == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "ID is required"})
+	}
 
-    // Cari mahasiswa terlebih dahulu
-    var mahasiswa Mahasiswa
-    if err := db.First(&mahasiswa, id).Error; err != nil {
-        return c.Status(404).JSON(fiber.Map{"error": "Mahasiswa not found"})
-    }
+	// Cari mahasiswa terlebih dahulu
+	var mahasiswa Mahasiswa
+	if err := db.First(&mahasiswa, id).Error; err != nil {
+		return c.Status(404).JSON(fiber.Map{"error": "Mahasiswa not found"})
+	}
 
-    // Hapus mahasiswa
-    if err := db.Delete(&mahasiswa).Error; err != nil {
-        return c.Status(500).JSON(fiber.Map{"error": "Failed to delete mahasiswa"})
-    }
+	// Hapus mahasiswa
+	if err := db.Delete(&mahasiswa).Error; err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Failed to delete mahasiswa"})
+	}
 
-    return c.Status(200).JSON(fiber.Map{"message": "Mahasiswa berhasil dihapus"})
+	return c.Status(200).JSON(fiber.Map{"message": "Mahasiswa berhasil dihapus"})
 }

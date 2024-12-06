@@ -1,15 +1,15 @@
-import './App.css';
+import '../App.css';
 import React, {useEffect, useState} from 'react';
 import Swal from 'sweetalert2';
-import Button from "./components/Button.jsx";
-import Table from "./components/Tabel.jsx";
-import Header from "./layouts/Header.jsx"
+import Button from "../components/Button.jsx";
+import Table from "../components/Tabel.jsx";
+import Header from "../layouts/Header.jsx"
 import axios from "axios";
-import Sider from "./layouts/Sider.jsx";
-import Footer from "./layouts/Footer.jsx";
-import ModalTambah from "./layouts/ModalTambah.jsx";
+import Sider from "../layouts/Sider.jsx";
+import Footer from "../layouts/Footer.jsx";
+import ModalTambah from "../layouts/ModalTambah.jsx";
 
-function App() {
+function AdminLayout() {
     return (
         <div className="bg-gray-100">
             <div className="flex min-h-screen">
@@ -287,4 +287,4 @@ const Content = () => {
     );
 };
 
-export default App;
+export default AdminLayout;

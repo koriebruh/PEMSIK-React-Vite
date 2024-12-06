@@ -1,8 +1,8 @@
-import './App.css';
+import './AdminLayout.css';
 import React, { useState } from 'react';
 import Swal from 'sweetalert2';
 
-function App() {
+function AdminLayout() {
   return (
       <div className="bg-gray-100">
         <div className="flex min-h-screen">
@@ -237,4 +237,4 @@ function Baris (props){
 }
 
 
-export default App;
+export default AdminLayout;
