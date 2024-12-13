@@ -14,18 +14,26 @@ const router = createBrowserRouter([
         path: '/register',
         element: <Register/>,
     },
-
     {
-        path: '/admin',
-        element:<Dashboard/>,
-        children:[
-            {
-                path:'mahasiswa',
-                // index:true,
-                element: <AdminLayout/>,
-            }
-        ]
-    }
+        path: '/dashboard',
+        element: <Dashboard/>,
+    },
+    {
+        path: '/admin/mahasiswa',
+        element: <AdminLayout/>,
+    },
+
+    // {
+    //     path: '/admin',
+    //     element:<Dashboard/>,
+    //     children:[
+    //         {
+    //             path:'mahasiswa',
+    //             // index:true,
+    //             element: <AdminLayout/>,
+    //         }
+    //     ]
+    // }
 
 ]);
 

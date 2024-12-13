@@ -8,10 +8,10 @@ function Sider() {
                 <nav className="py-2 px-4 mt-4">
                     <ul>
                         <li className="hover:bg-indigo-700">
-                            <a href="">Dashboard</a>
+                            <a href="/dashboard">Dashboard</a>
                         </li>
                         <li className="hover:bg-indigo-700">
-                            <a href="">Mahasiswa</a>
+                            <a href="/admin/mahasiswa">Mahasiswa</a>
                         </li>
                         <li className="hover:bg-indigo-700">
                             <a href="">Setting</a>
