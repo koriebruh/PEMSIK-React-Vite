@@ -31,7 +31,7 @@ const Login = () => {
                 localStorage.setItem('authToken', data.data.token);
                 setSuccess('Login successful!');
                 // Redirect ke halaman dashboard setelah login
-                // window.location.href = '/dashboard';
+                window.location.href = '/dashboard';
             } else {
                 setError(data.message || 'Login failed!');
             }

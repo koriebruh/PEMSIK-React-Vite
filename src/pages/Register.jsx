@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom'; // Untuk redirect setelah registrasi
+import Swal from 'sweetalert2'; // Mengimpor SweetAlert2
 
 const Register = () => {
     const [formData, setFormData] = useState({ name: '', email: '', password: '' });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
-    const [success, setSuccess] = useState(null);
     const navigate = useNavigate(); // Hook untuk navigasi setelah berhasil registrasi
 
     const handleChange = (e) => {
@@ -16,7 +16,6 @@ const Register = () => {
         e.preventDefault();
         setLoading(true);
         setError(null);
-        setSuccess(null);
 
         try {
             const response = await fetch('http://demo-api.syaifur.io/api/register', {
@@ -29,16 +28,32 @@ const Register = () => {
 
             const data = await response.json();
             if (response.ok) {
-                setSuccess('Registration successful! Please log in to continue.');
-                // Redirect ke halaman login setelah registrasi berhasil
-                setTimeout(() => {
-                    navigate('/');
-                }, 2000);
+                // SweetAlert sukses
+                Swal.fire({
+                    title: 'Success!',
+                    text: 'Registration successful! Please log in to continue.',
+                    icon: 'success',
+                    confirmButtonText: 'OK',
+                }).then(() => {
+                    navigate('/'); // Redirect ke halaman login setelah sukses
+                });
             } else {
-                setError(data.message || 'Registration failed!');
+                // SweetAlert error
+                Swal.fire({
+                    title: 'Error!',
+                    text: data.message || 'Registration failed!',
+                    icon: 'error',
+                    confirmButtonText: 'OK',
+                });
             }
         } catch (error) {
-            setError('An error occurred!');
+            // SweetAlert error jika ada error jaringan
+            Swal.fire({
+                title: 'Oops!',
+                text: 'An error occurred!',
+                icon: 'error',
+                confirmButtonText: 'OK',
+            });
         } finally {
             setLoading(false);
         }
@@ -48,8 +63,6 @@ const Register = () => {
         <div className="flex justify-center items-center h-screen bg-gray-100">
             <div className="w-full max-w-sm p-8 bg-white rounded-lg shadow-lg">
                 <h2 className="text-2xl font-semibold text-center text-gray-800 mb-6">Register</h2>
-                {error && <div className="text-red-500 text-sm mb-4">{error}</div>}
-                {success && <div className="text-green-500 text-sm mb-4">{success}</div>}
                 <form onSubmit={handleSubmit}>
                     <div className="mb-4">
                         <label htmlFor="name" className="block text-sm font-medium text-gray-700">Name</label>
