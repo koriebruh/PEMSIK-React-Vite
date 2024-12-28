@@ -1,45 +1,36 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate, Link } from 'react-router-dom';
+import { loginUser, resetStatus } from '../store/authSlice';
 
 const Login = () => {
     const [formData, setFormData] = useState({ email: '', password: '' });
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(null);
-    const [success, setSuccess] = useState(null);
+    const dispatch = useDispatch();
+    const navigate = useNavigate();
+
+    const { status, error, success, token } = useSelector((state) => state.auth);
+    const loading = status === 'loading';
+
+    useEffect(() => {
+        if (token) {
+            navigate('/dashboard');
+        }
+    }, [token, navigate]);
+
+    useEffect(() => {
+        // Cleanup on unmount
+        return () => {
+            dispatch(resetStatus());
+        };
+    }, [dispatch]);
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
-    const handleSubmit = async (e) => {
+    const handleSubmit = (e) => {
         e.preventDefault();
-        setLoading(true);
-        setError(null);
-        setSuccess(null);
-
-        try {
-            const response = await fetch('http://demo-api.syaifur.io/api/login', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(formData),
-            });
-
-            const data = await response.json();
-            if (response.ok) {
-                // Menyimpan token setelah login berhasil
-                localStorage.setItem('authToken', data.data.token);
-                setSuccess('Login successful!');
-                // Redirect ke halaman dashboard setelah login
-                window.location.href = '/dashboard';
-            } else {
-                setError(data.message || 'Login failed!');
-            }
-        } catch (error) {
-            setError('An error occurred!');
-        } finally {
-            setLoading(false);
-        }
+        dispatch(loginUser(formData));
     };
 
     return (
@@ -89,9 +80,9 @@ const Login = () => {
                     <span className="text-sm text-gray-600">
                         Don't have an account?
                     </span>
-                    <a href="/register" className="text-sm font-medium text-indigo-600 hover:text-indigo-500">
+                    <Link to="/register" className="text-sm font-medium text-indigo-600 hover:text-indigo-500 ml-1">
                         Register here
-                    </a>
+                    </Link>
                 </div>
             </div>
         </div>

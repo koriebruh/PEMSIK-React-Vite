@@ -1,89 +1,61 @@
-import '../App.css';
-import React, {useEffect, useState} from 'react';
+import React, { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import Swal from 'sweetalert2';
+import {
+    fetchStudents,
+    addStudent,
+    updateStudent,
+    deleteStudent
+} from '../store/studentSlice.jsx';
+
+import Header from "../layouts/Header";
+import Sider from "../layouts/Sider";
+import Footer from "../layouts/Footer";
+import ModalTambah from "../layouts/ModalTambah";
 import Button from "../components/Button.jsx";
 import Table from "../components/Tabel.jsx";
-import Header from "../layouts/Header.jsx";
-import axios from "axios";
-import Sider from "../layouts/Sider.jsx";
-import Footer from "../layouts/Footer.jsx";
-import ModalTambah from "../layouts/ModalTambah.jsx";
 
 function AdminLayout() {
     return (
         <div className="bg-gray-100">
             <div className="flex min-h-screen">
-                <Sider/>
+                <Sider />
                 <div className="flex-1 flex flex-col">
-                    <Header/>
-                    <Content/>
-                    <Footer/>
+                    <Header />
+                    <Content />
+                    <Footer />
                 </div>
             </div>
-            <ModalTambah/>
+            <ModalTambah />
         </div>
     );
 }
 
 const Content = () => {
+    const dispatch = useDispatch();
+    const { data, status, error } = useSelector(state => state.students);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [data, setData] = useState([]);
-    const [isLoading, setIsLoading] = useState(false);
     const [newStudent, setNewStudent] = useState({
         progdi_id: '',
         nim: '',
         nama: '',
         alamat: '',
         umur: ''
-    }); // for add format
+    });
 
     useEffect(() => {
-        fetchMahasiswa();
-    }, []);
-
-    const fetchMahasiswa = async () => {
-        const token = localStorage.getItem("authToken"); // Retrieve the token from localStorage
-
-        if (!token) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Token Tidak Ditemukan',
-                text: 'Harap login terlebih dahulu',
-                confirmButtonColor: '#dc3545'
-            });
-            return;
-        }
-
-        setIsLoading(true);
-        try {
-            const response = await axios.get('http://demo-api.syaifur.io/api/mahasiswa', {
-                headers: {
-                    'Authorization': `Bearer ${token}` // Sending the token in the Authorization header
-                }
-            });
-
-            if (response.data.code === 200) {
-                setData(response.data.data); // Set the student data from the response
-            } else {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Gagal Mengambil Data',
-                    text: response.data.message,
-                    confirmButtonColor: '#dc3545'
+        if (status === 'idle') {
+            dispatch(fetchStudents()).unwrap()
+                .catch(error => {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: error,
+                        confirmButtonColor: '#dc3545'
+                    });
                 });
-            }
-        } catch (error) {
-            console.error('Error fetching data:', error);
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'Gagal mengambil data mahasiswa',
-                confirmButtonColor: '#dc3545'
-            });
-        } finally {
-            setIsLoading(false);
         }
-    };
+    }, [status, dispatch]);
 
     const handleOpenModal = () => setIsModalOpen(true);
     const handleCloseModal = () => {
@@ -100,7 +72,6 @@ const Content = () => {
     const handleAddStudent = async (e) => {
         e.preventDefault();
 
-        // Enhanced validation for empty fields and valid data
         if (
             !newStudent.progdi_id.trim() ||
             !newStudent.nim.trim() ||
@@ -117,7 +88,6 @@ const Content = () => {
             return;
         }
 
-        // Ensure NIM uniqueness within the current dataset
         const nimExists = data.some(student => student.nim === newStudent.nim);
         if (nimExists) {
             Swal.fire({
@@ -129,86 +99,27 @@ const Content = () => {
             return;
         }
 
-        const token = localStorage.getItem("authToken");
-        if (!token) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Token Tidak Ditemukan',
-                text: 'Harap login terlebih dahulu',
-                confirmButtonColor: '#dc3545'
-            });
-            return;
-        }
-
-        setIsLoading(true);
         try {
-            // Log data that will be sent to the API
-            console.log('Data yang dikirim:', {
-                progdi_id: newStudent.progdi_id,
-                nim: newStudent.nim,
-                nama: newStudent.nama,
-                alamat: newStudent.alamat,
-                umur: parseInt(newStudent.umur, 10)
+            await dispatch(addStudent(newStudent)).unwrap();
+            handleCloseModal();
+            await Swal.fire({
+                icon: 'success',
+                title: 'Berhasil!',
+                text: 'Mahasiswa berhasil ditambahkan',
+                timer: 1500,
+                showConfirmButton: false
             });
-
-            const response = await axios.post(
-                'http://demo-api.syaifur.io/api/mahasiswa',
-                {
-                    progdi_id: newStudent.progdi_id,
-                    nim: newStudent.nim,
-                    nama: newStudent.nama,
-                    alamat: newStudent.alamat,
-                    umur: parseInt(newStudent.umur, 10) // Pastikan umur adalah angka
-                },
-                {
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    }
-                }
-            );
-
-            if (response.data.code === 201 && response.data.data) {
-                setData(prevData => [...prevData, response.data.data]);
-                handleCloseModal();
-                await Swal.fire({
-                    icon: 'success',
-                    title: 'Berhasil!',
-                    text: 'Mahasiswa berhasil ditambahkan',
-                    timer: 1500,
-                    showConfirmButton: false
-                });
-            } else {
-                throw new Error(response.data.message || 'Unknown error occurred');
-            }
         } catch (error) {
-            console.error('Error adding student:', error);
             await Swal.fire({
                 icon: 'error',
                 title: 'Gagal',
-                text: error.response?.data?.message || 'Gagal menambahkan mahasiswa',
+                text: error,
                 confirmButtonColor: '#dc3545'
             });
-        } finally {
-            setIsLoading(false);
         }
     };
 
-
-
     const handleDelete = async (id) => {
-        const token = localStorage.getItem("authToken");
-
-        if (!token) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Token Tidak Ditemukan',
-                text: 'Harap login terlebih dahulu',
-                confirmButtonColor: '#dc3545'
-            });
-            return;
-        }
-
         try {
             const result = await Swal.fire({
                 title: 'Konfirmasi Hapus',
@@ -222,64 +133,35 @@ const Content = () => {
             });
 
             if (result.isConfirmed) {
-                setIsLoading(true);
-
-                const response = await axios.delete(`http://demo-api.syaifur.io/api/mahasiswa/${id}`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}` // Sending the token in the Authorization header
-                    }
+                await dispatch(deleteStudent(id)).unwrap();
+                await Swal.fire({
+                    icon: 'success',
+                    title: 'Berhasil',
+                    text: 'Data berhasil dihapus',
+                    timer: 1500,
+                    showConfirmButton: false
                 });
-
-                if (response.data.code === 200) {
-                    // Optimistic update
-                    setData(prevData => prevData.filter(student => student.id !== id));
-
-                    await Swal.fire({
-                        icon: 'success',
-                        title: 'Berhasil',
-                        text: 'Data berhasil dihapus',
-                        timer: 1500,
-                        showConfirmButton: false
-                    });
-                }
             }
         } catch (error) {
-            console.error('Error deleting:', error);
             await Swal.fire({
                 icon: 'error',
                 title: 'Gagal Menghapus',
-                text: error.response?.data?.message || 'Terjadi kesalahan saat menghapus data',
+                text: error,
                 confirmButtonColor: '#dc3545'
             });
-            // Refresh data if delete failed
-            await fetchMahasiswa();
-        } finally {
-            setIsLoading(false);
         }
     };
 
     const handleEdit = async (id, currentData) => {
-        const token = localStorage.getItem("authToken");
-
-        if (!token) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Token Tidak Ditemukan',
-                text: 'Harap login terlebih dahulu',
-                confirmButtonColor: '#dc3545'
-            });
-            return;
-        }
-
         try {
-            const {value: formData, isConfirmed} = await Swal.fire({
+            const { value: formData, isConfirmed } = await Swal.fire({
                 title: 'Edit Data Mahasiswa',
                 html: `
-                <input id="swal-input-nim" class="swal2-input" placeholder="NIM" value="${currentData.nim}" />
-                <input id="swal-input-nama" class="swal2-input" placeholder="Nama" value="${currentData.nama}" />
-                <input id="swal-input-alamat" class="swal2-input" placeholder="Alamat" value="${currentData.alamat}" />
-                <input id="swal-input-umur" class="swal2-input" placeholder="Umur" type="number" value="${currentData.umur}" />
-            `,
+          <input id="swal-input-nim" class="swal2-input" placeholder="NIM" value="${currentData.nim}" />
+          <input id="swal-input-nama" class="swal2-input" placeholder="Nama" value="${currentData.nama}" />
+          <input id="swal-input-alamat" class="swal2-input" placeholder="Alamat" value="${currentData.alamat}" />
+          <input id="swal-input-umur" class="swal2-input" placeholder="Umur" type="number" value="${currentData.umur}" />
+        `,
                 focusConfirm: false,
                 showCancelButton: true,
                 confirmButtonText: 'Simpan',
@@ -297,7 +179,7 @@ const Content = () => {
                         return null;
                     }
 
-                    return {nim, nama, alamat, umur};
+                    return { nim, nama, alamat, umur };
                 }
             });
 
@@ -319,49 +201,24 @@ const Content = () => {
                     return;
                 }
 
-                setIsLoading(true);
-
-                const response = await axios.put(
-                    `http://demo-api.syaifur.io/api/mahasiswa/${id}`,
-                    changes,
-                    {
-                        headers: {
-                            'Authorization': `Bearer ${token}`
-                        }
-                    }
-                );
-
-                if (response.data.code === 200) {
-                    setData(prevData =>
-                        prevData.map(student =>
-                            student.id === id ? {...student, ...changes} : student
-                        )
-                    );
-
-                    await Swal.fire({
-                        icon: 'success',
-                        title: 'Berhasil',
-                        text: 'Data berhasil diperbarui',
-                        timer: 1500,
-                        showConfirmButton: false
-                    });
-                }
+                await dispatch(updateStudent({ id, changes })).unwrap();
+                await Swal.fire({
+                    icon: 'success',
+                    title: 'Berhasil',
+                    text: 'Data berhasil diperbarui',
+                    timer: 1500,
+                    showConfirmButton: false
+                });
             }
         } catch (error) {
-            console.error('Error updating:', error);
             await Swal.fire({
                 icon: 'error',
                 title: 'Gagal Memperbarui',
-                text: error.response?.data?.message || 'Terjadi kesalahan saat memperbarui data',
+                text: error,
                 confirmButtonColor: '#dc3545'
             });
-            await fetchMahasiswa();
-        } finally {
-            setIsLoading(false);
         }
     };
-
-
 
     return (
         <>
@@ -371,12 +228,12 @@ const Content = () => {
                     label="Tambah"
                     className="bg-green-500 text-white"
                     onClick={handleOpenModal}
-                    disabled={isLoading}
+                    disabled={status === 'loading'}
                 />
             </div>
 
             <main className="flex-grow p-4 bg-blue-50">
-                {isLoading ? (
+                {status === 'loading' ? (
                     <div className="flex justify-center items-center h-32">
                         <p>Loading...</p>
                     </div>
@@ -389,7 +246,6 @@ const Content = () => {
                 )}
             </main>
 
-            {/*DINSINI FORM UNUTK ADD BG*/}
             {isModalOpen && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
                     <div className="bg-white p-6 rounded-lg shadow-lg w-1/3">
@@ -403,7 +259,7 @@ const Content = () => {
                                     className="w-full px-4 py-2 border rounded-lg"
                                     value={newStudent.progdi_id}
                                     onChange={(e) => setNewStudent({...newStudent, progdi_id: e.target.value})}
-                                    disabled={isLoading}
+                                    disabled={status === 'loading'}
                                 />
                             </div>
                             <div className="mb-4">
@@ -414,7 +270,7 @@ const Content = () => {
                                     className="w-full px-4 py-2 border rounded-lg"
                                     value={newStudent.nim}
                                     onChange={(e) => setNewStudent({...newStudent, nim: e.target.value})}
-                                    disabled={isLoading}
+                                    disabled={status === 'loading'}
                                 />
                             </div>
                             <div className="mb-4">
@@ -425,7 +281,7 @@ const Content = () => {
                                     className="w-full px-4 py-2 border rounded-lg"
                                     value={newStudent.nama}
                                     onChange={(e) => setNewStudent({...newStudent, nama: e.target.value})}
-                                    disabled={isLoading}
+                                    disabled={status === 'loading'}
                                 />
                             </div>
                             <div className="mb-4">
@@ -436,7 +292,7 @@ const Content = () => {
                                     className="w-full px-4 py-2 border rounded-lg"
                                     value={newStudent.alamat}
                                     onChange={(e) => setNewStudent({...newStudent, alamat: e.target.value})}
-                                    disabled={isLoading}
+                                    disabled={status === 'loading'}
                                 />
                             </div>
                             <div className="mb-4">
@@ -447,7 +303,7 @@ const Content = () => {
                                     className="w-full px-4 py-2 border rounded-lg"
                                     value={newStudent.umur}
                                     onChange={(e) => setNewStudent({...newStudent, umur: e.target.value})}
-                                    disabled={isLoading}
+                                    disabled={status === 'loading'}
                                 />
                             </div>
 
@@ -456,13 +312,13 @@ const Content = () => {
                                     label="Batal"
                                     className="bg-gray-500 text-white mr-2"
                                     onClick={handleCloseModal}
-                                    disabled={isLoading}
+                                    disabled={status === 'loading'}
                                 />
                                 <Button
                                     label="Simpan"
                                     className="bg-green-500 text-white"
                                     type="submit"
-                                    disabled={isLoading}
+                                    disabled={status === 'loading'}
                                 />
                             </div>
                         </form>

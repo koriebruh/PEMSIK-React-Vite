@@ -4,23 +4,31 @@ import Login from './pages/Login.jsx';
 import Register from './pages/Register.jsx';
 import AdminLayout from "./pages/AdminLayout.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
+import {Provider} from "react-redux";
+import {store} from "./store/store.jsx";
 
 const router = createBrowserRouter([
     {
         path: '/',
-        element: <Login/>,
+        element: <Provider store={store}>
+            <Login/>
+        </Provider>,
     },
     {
         path: '/register',
-        element: <Register/>,
+        element: <Provider store={store}><Register/></Provider> ,
     },
     {
         path: '/dashboard',
-        element: <Dashboard/>,
+        element:
+            <Dashboard/>,
     },
     {
         path: '/admin/mahasiswa',
-        element: <AdminLayout/>,
+
+        element: <Provider store={store}>
+            <AdminLayout/>
+        </Provider>,
     },
 
 ]);

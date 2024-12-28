@@ -1,62 +1,53 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom'; // Untuk redirect setelah registrasi
-import Swal from 'sweetalert2'; // Mengimpor SweetAlert2
+// src/pages/Register.jsx
+import React, { useState, useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate, Link } from 'react-router-dom';
+import { registerUser, resetStatus } from '../store/authSlice';
+import Swal from 'sweetalert2';
 
 const Register = () => {
     const [formData, setFormData] = useState({ name: '', email: '', password: '' });
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(null);
-    const navigate = useNavigate(); // Hook untuk navigasi setelah berhasil registrasi
+    const dispatch = useDispatch();
+    const navigate = useNavigate();
+
+    const { status, error, success } = useSelector((state) => state.auth);
+    const loading = status === 'loading';
+
+    useEffect(() => {
+        if (success) {
+            Swal.fire({
+                title: 'Success!',
+                text: success,
+                icon: 'success',
+                confirmButtonText: 'OK',
+            }).then(() => {
+                navigate('/');
+            });
+        }
+        if (error) {
+            Swal.fire({
+                title: 'Error!',
+                text: error,
+                icon: 'error',
+                confirmButtonText: 'OK',
+            });
+        }
+    }, [success, error, navigate]);
+
+    useEffect(() => {
+        // Cleanup on unmount
+        return () => {
+            dispatch(resetStatus());
+        };
+    }, [dispatch]);
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
-    const handleSubmit = async (e) => {
+    const handleSubmit = (e) => {
         e.preventDefault();
-        setLoading(true);
-        setError(null);
-
-        try {
-            const response = await fetch('http://demo-api.syaifur.io/api/register', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(formData),
-            });
-
-            const data = await response.json();
-            if (response.ok) {
-                // SweetAlert sukses
-                Swal.fire({
-                    title: 'Success!',
-                    text: 'Registration successful! Please log in to continue.',
-                    icon: 'success',
-                    confirmButtonText: 'OK',
-                }).then(() => {
-                    navigate('/'); // Redirect ke halaman login setelah sukses
-                });
-            } else {
-                // SweetAlert error
-                Swal.fire({
-                    title: 'Error!',
-                    text: data.message || 'Registration failed!',
-                    icon: 'error',
-                    confirmButtonText: 'OK',
-                });
-            }
-        } catch (error) {
-            // SweetAlert error jika ada error jaringan
-            Swal.fire({
-                title: 'Oops!',
-                text: 'An error occurred!',
-                icon: 'error',
-                confirmButtonText: 'OK',
-            });
-        } finally {
-            setLoading(false);
-        }
+        dispatch(registerUser(formData));
     };
 
     return (
@@ -117,9 +108,9 @@ const Register = () => {
                     <span className="text-sm text-gray-600">
                         Already have an account?
                     </span>
-                    <a href="/" className="text-sm font-medium text-indigo-600 hover:text-indigo-500">
+                    <Link to="/" className="text-sm font-medium text-indigo-600 hover:text-indigo-500 ml-1">
                         Login here
-                    </a>
+                    </Link>
                 </div>
             </div>
         </div>
