@@ -3,7 +3,7 @@ import React, {useEffect, useState} from 'react';
 import Swal from 'sweetalert2';
 import Button from "../components/Button.jsx";
 import Table from "../components/Tabel.jsx";
-import Header from "../layouts/Header.jsx"
+import Header from "../layouts/Header.jsx";
 import axios from "axios";
 import Sider from "../layouts/Sider.jsx";
 import Footer from "../layouts/Footer.jsx";
@@ -14,14 +14,12 @@ function AdminLayout() {
         <div className="bg-gray-100">
             <div className="flex min-h-screen">
                 <Sider/>
-
                 <div className="flex-1 flex flex-col">
                     <Header/>
                     <Content/>
                     <Footer/>
                 </div>
             </div>
-
             <ModalTambah/>
         </div>
     );
@@ -31,17 +29,49 @@ const Content = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [data, setData] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
-    const [newStudent, setNewStudent] = useState({ nim: '', name: '' });
+    const [newStudent, setNewStudent] = useState({
+        progdi_id: '',
+        nim: '',
+        nama: '',
+        alamat: '',
+        umur: ''
+    }); // for add format
 
     useEffect(() => {
         fetchMahasiswa();
     }, []);
 
     const fetchMahasiswa = async () => {
+        const token = localStorage.getItem("authToken"); // Retrieve the token from localStorage
+
+        if (!token) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Token Tidak Ditemukan',
+                text: 'Harap login terlebih dahulu',
+                confirmButtonColor: '#dc3545'
+            });
+            return;
+        }
+
         setIsLoading(true);
         try {
-            const response = await axios.get('http://localhost:8080/mahasiswa');
-            setData(response.data);
+            const response = await axios.get('http://demo-api.syaifur.io/api/mahasiswa', {
+                headers: {
+                    'Authorization': `Bearer ${token}` // Sending the token in the Authorization header
+                }
+            });
+
+            if (response.data.code === 200) {
+                setData(response.data.data); // Set the student data from the response
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Gagal Mengambil Data',
+                    text: response.data.message,
+                    confirmButtonColor: '#dc3545'
+                });
+            }
         } catch (error) {
             console.error('Error fetching data:', error);
             Swal.fire({
@@ -58,16 +88,53 @@ const Content = () => {
     const handleOpenModal = () => setIsModalOpen(true);
     const handleCloseModal = () => {
         setIsModalOpen(false);
-        setNewStudent({ nim: '', name: '' });
+        setNewStudent({
+            progdi_id: '',
+            nim: '',
+            nama: '',
+            alamat: '',
+            umur: ''
+        });
     };
 
     const handleAddStudent = async (e) => {
         e.preventDefault();
-        if (!newStudent.nim.trim() || !newStudent.name.trim()) {
+
+        // Enhanced validation for empty fields and valid data
+        if (
+            !newStudent.progdi_id.trim() ||
+            !newStudent.nim.trim() ||
+            !newStudent.nama.trim() ||
+            !newStudent.alamat.trim() ||
+            isNaN(newStudent.umur) || newStudent.umur <= 0
+        ) {
             Swal.fire({
                 icon: 'error',
                 title: 'Validasi Error',
-                text: 'NIM dan Nama harus diisi',
+                text: 'Semua bidang harus diisi dengan benar dan valid',
+                confirmButtonColor: '#dc3545'
+            });
+            return;
+        }
+
+        // Ensure NIM uniqueness within the current dataset
+        const nimExists = data.some(student => student.nim === newStudent.nim);
+        if (nimExists) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'NIM Sudah Digunakan',
+                text: 'NIM yang dimasukkan sudah ada. Silakan gunakan NIM lain.',
+                confirmButtonColor: '#dc3545'
+            });
+            return;
+        }
+
+        const token = localStorage.getItem("authToken");
+        if (!token) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Token Tidak Ditemukan',
+                text: 'Harap login terlebih dahulu',
                 confirmButtonColor: '#dc3545'
             });
             return;
@@ -75,10 +142,34 @@ const Content = () => {
 
         setIsLoading(true);
         try {
-            const response = await axios.post('http://localhost:8080/mahasiswa', newStudent);
+            // Log data that will be sent to the API
+            console.log('Data yang dikirim:', {
+                progdi_id: newStudent.progdi_id,
+                nim: newStudent.nim,
+                nama: newStudent.nama,
+                alamat: newStudent.alamat,
+                umur: parseInt(newStudent.umur, 10)
+            });
 
-            if (response.data) {
-                setData(prevData => [...prevData, response.data]);
+            const response = await axios.post(
+                'http://demo-api.syaifur.io/api/mahasiswa',
+                {
+                    progdi_id: newStudent.progdi_id,
+                    nim: newStudent.nim,
+                    nama: newStudent.nama,
+                    alamat: newStudent.alamat,
+                    umur: parseInt(newStudent.umur, 10) // Pastikan umur adalah angka
+                },
+                {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                }
+            );
+
+            if (response.data.code === 201 && response.data.data) {
+                setData(prevData => [...prevData, response.data.data]);
                 handleCloseModal();
                 await Swal.fire({
                     icon: 'success',
@@ -87,6 +178,8 @@ const Content = () => {
                     timer: 1500,
                     showConfirmButton: false
                 });
+            } else {
+                throw new Error(response.data.message || 'Unknown error occurred');
             }
         } catch (error) {
             console.error('Error adding student:', error);
@@ -101,7 +194,21 @@ const Content = () => {
         }
     };
 
+
+
     const handleDelete = async (id) => {
+        const token = localStorage.getItem("authToken");
+
+        if (!token) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Token Tidak Ditemukan',
+                text: 'Harap login terlebih dahulu',
+                confirmButtonColor: '#dc3545'
+            });
+            return;
+        }
+
         try {
             const result = await Swal.fire({
                 title: 'Konfirmasi Hapus',
@@ -117,9 +224,13 @@ const Content = () => {
             if (result.isConfirmed) {
                 setIsLoading(true);
 
-                const response = await axios.delete(`http://localhost:8080/mahasiswa/${id}`);
+                const response = await axios.delete(`http://demo-api.syaifur.io/api/mahasiswa/${id}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}` // Sending the token in the Authorization header
+                    }
+                });
 
-                if (response.status === 200) {
+                if (response.data.code === 200) {
                     // Optimistic update
                     setData(prevData => prevData.filter(student => student.id !== id));
 
@@ -147,41 +258,83 @@ const Content = () => {
         }
     };
 
-    const handleEdit = async (id, currentName) => {
+    const handleEdit = async (id, currentData) => {
+        const token = localStorage.getItem("authToken");
+
+        if (!token) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Token Tidak Ditemukan',
+                text: 'Harap login terlebih dahulu',
+                confirmButtonColor: '#dc3545'
+            });
+            return;
+        }
+
         try {
-            const { value: newName, isConfirmed } = await Swal.fire({
-                title: 'Edit Data',
-                input: 'text',
-                inputLabel: 'Nama Mahasiswa',
-                inputValue: currentName,
+            const {value: formData, isConfirmed} = await Swal.fire({
+                title: 'Edit Data Mahasiswa',
+                html: `
+                <input id="swal-input-nim" class="swal2-input" placeholder="NIM" value="${currentData.nim}" />
+                <input id="swal-input-nama" class="swal2-input" placeholder="Nama" value="${currentData.nama}" />
+                <input id="swal-input-alamat" class="swal2-input" placeholder="Alamat" value="${currentData.alamat}" />
+                <input id="swal-input-umur" class="swal2-input" placeholder="Umur" type="number" value="${currentData.umur}" />
+            `,
+                focusConfirm: false,
                 showCancelButton: true,
                 confirmButtonText: 'Simpan',
                 cancelButtonText: 'Batal',
                 confirmButtonColor: '#198754',
                 cancelButtonColor: '#6c757d',
-                inputValidator: (value) => {
-                    if (!value || !value.trim()) {
-                        return 'Nama tidak boleh kosong!';
+                preConfirm: () => {
+                    const nim = document.getElementById('swal-input-nim').value.trim();
+                    const nama = document.getElementById('swal-input-nama').value.trim();
+                    const alamat = document.getElementById('swal-input-alamat').value.trim();
+                    const umur = parseInt(document.getElementById('swal-input-umur').value, 10);
+
+                    if (!nim || !nama || !alamat || isNaN(umur)) {
+                        Swal.showValidationMessage('Semua bidang harus diisi dengan benar');
+                        return null;
                     }
-                    if (value.length > 100) {
-                        return 'Nama terlalu panjang (maksimal 100 karakter)';
-                    }
-                    return null;
+
+                    return {nim, nama, alamat, umur};
                 }
             });
 
-            if (isConfirmed && newName && newName.trim()) {
+            if (isConfirmed && formData) {
+                const changes = Object.keys(formData).reduce((acc, key) => {
+                    if (formData[key] !== currentData[key]) {
+                        acc[key] = formData[key];
+                    }
+                    return acc;
+                }, {});
+
+                if (Object.keys(changes).length === 0) {
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'Tidak Ada Perubahan',
+                        text: 'Data tidak berubah',
+                        confirmButtonColor: '#6c757d'
+                    });
+                    return;
+                }
+
                 setIsLoading(true);
 
-                const response = await axios.put(`http://localhost:8080/mahasiswa/${id}`, {
-                    name: newName.trim()
-                });
+                const response = await axios.put(
+                    `http://demo-api.syaifur.io/api/mahasiswa/${id}`,
+                    changes,
+                    {
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    }
+                );
 
-                if (response.status === 200 && response.data) {
-                    // Optimistic update
+                if (response.data.code === 200) {
                     setData(prevData =>
                         prevData.map(student =>
-                            student.id === id ? { ...student, name: newName.trim() } : student
+                            student.id === id ? {...student, ...changes} : student
                         )
                     );
 
@@ -202,12 +355,13 @@ const Content = () => {
                 text: error.response?.data?.message || 'Terjadi kesalahan saat memperbarui data',
                 confirmButtonColor: '#dc3545'
             });
-            // Refresh data if update failed
             await fetchMahasiswa();
         } finally {
             setIsLoading(false);
         }
     };
+
+
 
     return (
         <>
@@ -235,22 +389,20 @@ const Content = () => {
                 )}
             </main>
 
+            {/*DINSINI FORM UNUTK ADD BG*/}
             {isModalOpen && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
                     <div className="bg-white p-6 rounded-lg shadow-lg w-1/3">
                         <h2 className="text-xl font-bold mb-4">Tambah Mahasiswa</h2>
                         <form onSubmit={handleAddStudent}>
                             <div className="mb-4">
-                                <label htmlFor="name" className="block text-gray-700">Name</label>
+                                <label htmlFor="progdi_id" className="block text-gray-700">Program Studi ID</label>
                                 <input
-                                    id="name"
+                                    id="progdi_id"
                                     type="text"
                                     className="w-full px-4 py-2 border rounded-lg"
-                                    value={newStudent.name}
-                                    onChange={(e) => setNewStudent({
-                                        ...newStudent,
-                                        name: e.target.value
-                                    })}
+                                    value={newStudent.progdi_id}
+                                    onChange={(e) => setNewStudent({...newStudent, progdi_id: e.target.value})}
                                     disabled={isLoading}
                                 />
                             </div>
@@ -261,10 +413,44 @@ const Content = () => {
                                     type="text"
                                     className="w-full px-4 py-2 border rounded-lg"
                                     value={newStudent.nim}
-                                    onChange={(e) => setNewStudent({ ...newStudent, nim: e.target.value })}
+                                    onChange={(e) => setNewStudent({...newStudent, nim: e.target.value})}
                                     disabled={isLoading}
                                 />
                             </div>
+                            <div className="mb-4">
+                                <label htmlFor="nama" className="block text-gray-700">Nama</label>
+                                <input
+                                    id="nama"
+                                    type="text"
+                                    className="w-full px-4 py-2 border rounded-lg"
+                                    value={newStudent.nama}
+                                    onChange={(e) => setNewStudent({...newStudent, nama: e.target.value})}
+                                    disabled={isLoading}
+                                />
+                            </div>
+                            <div className="mb-4">
+                                <label htmlFor="alamat" className="block text-gray-700">Alamat</label>
+                                <input
+                                    id="alamat"
+                                    type="text"
+                                    className="w-full px-4 py-2 border rounded-lg"
+                                    value={newStudent.alamat}
+                                    onChange={(e) => setNewStudent({...newStudent, alamat: e.target.value})}
+                                    disabled={isLoading}
+                                />
+                            </div>
+                            <div className="mb-4">
+                                <label htmlFor="umur" className="block text-gray-700">Umur</label>
+                                <input
+                                    id="umur"
+                                    type="number"
+                                    className="w-full px-4 py-2 border rounded-lg"
+                                    value={newStudent.umur}
+                                    onChange={(e) => setNewStudent({...newStudent, umur: e.target.value})}
+                                    disabled={isLoading}
+                                />
+                            </div>
+
                             <div className="flex justify-end">
                                 <Button
                                     label="Batal"

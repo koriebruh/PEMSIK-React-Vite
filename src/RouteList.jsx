@@ -23,18 +23,6 @@ const router = createBrowserRouter([
         element: <AdminLayout/>,
     },
 
-    // {
-    //     path: '/admin',
-    //     element:<Dashboard/>,
-    //     children:[
-    //         {
-    //             path:'mahasiswa',
-    //             // index:true,
-    //             element: <AdminLayout/>,
-    //         }
-    //     ]
-    // }
-
 ]);
 
 const RouteList = () => {
