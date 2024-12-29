@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import Swal from 'sweetalert2';
+import { School, UserPlus, Loader2, GraduationCap, User, MapPin, Contact, CalendarClock, Save, X } from 'lucide-react';
 import {
     fetchStudents,
     addStudent,
@@ -222,20 +223,29 @@ const Content = () => {
 
     return (
         <>
-            <div className="flex justify-between mb-1 p-4 bg-blue-50">
-                <h2 className="text-xl font-semibold">LIST MAHASISWA</h2>
+            <div className="flex justify-between items-center mb-1 p-4 bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg shadow-sm">
+                <div className="flex items-center gap-2">
+                    <School className="text-blue-600" size={24} />
+                    <h2 className="text-xl font-semibold text-gray-800">LIST MAHASISWA</h2>
+                </div>
                 <Button
-                    label="Tambah"
-                    className="bg-green-500 text-white"
+                    label={
+                        <div className="flex items-center gap-2">
+                            <UserPlus size={18} />
+                            <span>Tambah</span>
+                        </div>
+                    }
+                    className="bg-green-500 hover:bg-green-600 text-white transition-colors duration-200"
                     onClick={handleOpenModal}
                     disabled={status === 'loading'}
                 />
             </div>
 
-            <main className="flex-grow p-4 bg-blue-50">
+            <main className="flex-grow p-4 bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg shadow-sm">
                 {status === 'loading' ? (
                     <div className="flex justify-center items-center h-32">
-                        <p>Loading...</p>
+                        <Loader2 className="animate-spin mr-2" size={24} />
+                        <p className="text-gray-600">Loading...</p>
                     </div>
                 ) : (
                     <Table
@@ -247,76 +257,104 @@ const Content = () => {
             </main>
 
             {isModalOpen && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
-                    <div className="bg-white p-6 rounded-lg shadow-lg w-1/3">
-                        <h2 className="text-xl font-bold mb-4">Tambah Mahasiswa</h2>
-                        <form onSubmit={handleAddStudent}>
-                            <div className="mb-4">
-                                <label htmlFor="progdi_id" className="block text-gray-700">Program Studi ID</label>
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center backdrop-blur-sm">
+                    <div className="bg-white p-6 rounded-lg shadow-lg w-1/3 max-w-md">
+                        <div className="flex items-center gap-2 mb-4">
+                            <GraduationCap className="text-blue-600" size={24} />
+                            <h2 className="text-xl font-bold text-gray-800">Tambah Mahasiswa</h2>
+                        </div>
+                        <form onSubmit={handleAddStudent} className="space-y-4">
+                            <div className="space-y-2">
+                                <label htmlFor="progdi_id" className="flex items-center gap-2 text-gray-700 font-medium">
+                                    <GraduationCap size={16} />
+                                    <span>Program Studi ID</span>
+                                </label>
                                 <input
                                     id="progdi_id"
                                     type="text"
-                                    className="w-full px-4 py-2 border rounded-lg"
+                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                                     value={newStudent.progdi_id}
                                     onChange={(e) => setNewStudent({...newStudent, progdi_id: e.target.value})}
                                     disabled={status === 'loading'}
                                 />
                             </div>
-                            <div className="mb-4">
-                                <label htmlFor="nim" className="block text-gray-700">NIM</label>
+                            <div className="space-y-2">
+                                <label htmlFor="nim" className="flex items-center gap-2 text-gray-700 font-medium">
+                                    <Contact size={16} />
+                                    <span>NIM</span>
+                                </label>
                                 <input
                                     id="nim"
                                     type="text"
-                                    className="w-full px-4 py-2 border rounded-lg"
+                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                                     value={newStudent.nim}
                                     onChange={(e) => setNewStudent({...newStudent, nim: e.target.value})}
                                     disabled={status === 'loading'}
                                 />
                             </div>
-                            <div className="mb-4">
-                                <label htmlFor="nama" className="block text-gray-700">Nama</label>
+                            <div className="space-y-2">
+                                <label htmlFor="nama" className="flex items-center gap-2 text-gray-700 font-medium">
+                                    <User size={16} />
+                                    <span>Nama</span>
+                                </label>
                                 <input
                                     id="nama"
                                     type="text"
-                                    className="w-full px-4 py-2 border rounded-lg"
+                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                                     value={newStudent.nama}
                                     onChange={(e) => setNewStudent({...newStudent, nama: e.target.value})}
                                     disabled={status === 'loading'}
                                 />
                             </div>
-                            <div className="mb-4">
-                                <label htmlFor="alamat" className="block text-gray-700">Alamat</label>
+                            <div className="space-y-2">
+                                <label htmlFor="alamat" className="flex items-center gap-2 text-gray-700 font-medium">
+                                    <MapPin size={16} />
+                                    <span>Alamat</span>
+                                </label>
                                 <input
                                     id="alamat"
                                     type="text"
-                                    className="w-full px-4 py-2 border rounded-lg"
+                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                                     value={newStudent.alamat}
                                     onChange={(e) => setNewStudent({...newStudent, alamat: e.target.value})}
                                     disabled={status === 'loading'}
                                 />
                             </div>
-                            <div className="mb-4">
-                                <label htmlFor="umur" className="block text-gray-700">Umur</label>
+                            <div className="space-y-2">
+                                <label htmlFor="umur" className="flex items-center gap-2 text-gray-700 font-medium">
+                                    <CalendarClock size={16} />
+                                    <span>Umur</span>
+                                </label>
                                 <input
                                     id="umur"
                                     type="number"
-                                    className="w-full px-4 py-2 border rounded-lg"
+                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                                     value={newStudent.umur}
                                     onChange={(e) => setNewStudent({...newStudent, umur: e.target.value})}
                                     disabled={status === 'loading'}
                                 />
                             </div>
 
-                            <div className="flex justify-end">
+                            <div className="flex justify-end gap-2 pt-4">
                                 <Button
-                                    label="Batal"
-                                    className="bg-gray-500 text-white mr-2"
+                                    label={
+                                        <div className="flex items-center gap-2">
+                                            <X size={18} />
+                                            <span>Batal</span>
+                                        </div>
+                                    }
+                                    className="bg-gray-500 hover:bg-gray-600 text-white transition-colors duration-200"
                                     onClick={handleCloseModal}
                                     disabled={status === 'loading'}
                                 />
                                 <Button
-                                    label="Simpan"
-                                    className="bg-green-500 text-white"
+                                    label={
+                                        <div className="flex items-center gap-2">
+                                            <Save size={18} />
+                                            <span>Simpan</span>
+                                        </div>
+                                    }
+                                    className="bg-green-500 hover:bg-green-600 text-white transition-colors duration-200"
                                     type="submit"
                                     disabled={status === 'loading'}
                                 />

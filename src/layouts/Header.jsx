@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { logoutUser } from "../store/authSlice";
 import Swal from "sweetalert2";
+import {LogOutIcon} from "lucide-react";
 
 function Header() {
     const navigate = useNavigate();
@@ -31,13 +32,14 @@ function Header() {
     };
 
     return (
-        <header className="w-64 bg-indigo-900">
+        <header className="w-full bg-indigo-900 px-6 py-4">
             <div className="flex justify-end">
                 <button
                     onClick={handleLogout}
-                    className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+                    className="flex items-center gap-2 bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors duration-200"
                 >
-                    Logout
+                    <LogOutIcon size={20} />
+                    <span>Logout</span>
                 </button>
             </div>
         </header>
