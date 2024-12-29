@@ -1,59 +1,29 @@
 import React from "react";
-import { useNavigate } from "react-router-dom"; // Untuk navigasi setelah logout
-import Swal from "sweetalert2"; // Untuk menampilkan SweetAlert
+import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { logoutUser } from "../store/authSlice";
+import Swal from "sweetalert2";
 
 function Header() {
-    const navigate = useNavigate(); // Hook untuk redirect setelah logout
+    const navigate = useNavigate();
+    const dispatch = useDispatch();
 
     const handleLogout = async () => {
-        const token = localStorage.getItem("authToken"); // Mengambil token dari localStorage
-        if (!token) {
+        try {
+            const result = await dispatch(logoutUser()).unwrap();
+
+            Swal.fire({
+                title: "Logged Out",
+                text: "You have been logged out successfully.",
+                icon: "success",
+                confirmButtonText: "OK",
+            }).then(() => {
+                navigate("/");
+            });
+        } catch (error) {
             Swal.fire({
                 title: "Error!",
-                text: "No token found. Please login again.",
-                icon: "error",
-                confirmButtonText: "OK",
-            });
-            return;
-        }
-
-        try {
-            const response = await fetch("http://demo-api.syaifur.io/api/logout", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`, // Mengirimkan token dalam header Authorization
-                },
-            });
-
-            const data = await response.json();
-
-            if (response.ok) {
-                // SweetAlert sukses
-                Swal.fire({
-                    title: "Logged Out",
-                    text: "You have been logged out successfully.",
-                    icon: "success",
-                    confirmButtonText: "OK",
-                }).then(() => {
-                    // Hapus token dari localStorage dan redirect ke halaman login
-                    localStorage.removeItem("authToken");
-                    navigate("/"); // Redirect ke halaman login
-                });
-            } else {
-                // SweetAlert error jika logout gagal
-                Swal.fire({
-                    title: "Error!",
-                    text: data.message || "Logout failed.",
-                    icon: "error",
-                    confirmButtonText: "OK",
-                });
-            }
-        } catch (error) {
-            // SweetAlert error jika ada kesalahan jaringan
-            Swal.fire({
-                title: "Oops!",
-                text: "An error occurred during logout.",
+                text: error || "Logout failed.",
                 icon: "error",
                 confirmButtonText: "OK",
             });

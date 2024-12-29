@@ -1,11 +1,11 @@
 // src/store/authSlice.jsx
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import {createSlice, createAsyncThunk} from '@reduxjs/toolkit';
 import axios from 'axios';
 import Swal from 'sweetalert2';
 
 export const loginUser = createAsyncThunk(
     'auth/login',
-    async (credentials, { rejectWithValue }) => {
+    async (credentials, {rejectWithValue}) => {
         try {
             const response = await axios.post('http://demo-api.syaifur.io/api/login', credentials);
 
@@ -22,12 +22,38 @@ export const loginUser = createAsyncThunk(
 
 export const registerUser = createAsyncThunk(
     'auth/register',
-    async (userData, { rejectWithValue }) => {
+    async (userData, {rejectWithValue}) => {
         try {
             const response = await axios.post('http://demo-api.syaifur.io/api/register', userData);
 
             if (response.data.code === 201) {
                 return response.data.data;
+            }
+            return rejectWithValue(response.data.message);
+        } catch (error) {
+            return rejectWithValue(error.response?.data?.message || 'An error occurred');
+        }
+    }
+);
+
+export const logoutUser = createAsyncThunk(
+    'auth/logout',
+    async (_, {rejectWithValue}) => {
+        try {
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                throw new Error('No token found');
+            }
+
+            const response = await axios.post('http://demo-api.syaifur.io/api/logout', {}, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
+
+            if (response.data.code === 200) {
+                localStorage.removeItem('authToken');
+                return response.data;
             }
             return rejectWithValue(response.data.message);
         } catch (error) {
@@ -93,9 +119,22 @@ const authSlice = createSlice({
                 state.status = 'failed';
                 state.error = action.payload;
                 state.success = null;
+            })
+            .addCase(logoutUser.pending, (state) => {
+                state.status = 'loading';
+            })
+            .addCase(logoutUser.fulfilled, (state) => {
+                state.user = null;
+                state.token = null;
+                state.status = 'idle';
+                state.success = 'Logged out successfully';
+            })
+            .addCase(logoutUser.rejected, (state, action) => {
+                state.status = 'failed';
+                state.error = action.payload;
             });
     }
 });
 
-export const { logout, resetStatus } = authSlice.actions;
+export const {logout, resetStatus} = authSlice.actions;
 export default authSlice.reducer;
